@@ -6,6 +6,9 @@ import SensorStatus from './SensorStatus';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
+const token = localStorage.getItem("token");
+const token_type = localStorage.getItem("token_type");
+
 function Dashboard() {
   const [sensorData, setSensorData] = useState(null);
   const [timestamp, setTimestamp] = useState('');
@@ -16,6 +19,7 @@ function Dashboard() {
       const response = await fetch(`${API_BASE_URL}/api/system/get_sensordata/last`, {
         method: 'GET',
         headers: {
+          Authorization:`${token_type} ${token}`,
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
@@ -64,7 +68,7 @@ function Dashboard() {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 lg:py-28">
       <header className="mb-8 bg-green-500 p-2 rounded-lg text-white">
         <h1 className="text-4xl font-bold text-white  ">
           <i className="fas fa-seedling mr-2"></i>
