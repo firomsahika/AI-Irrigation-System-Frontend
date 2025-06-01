@@ -53,7 +53,7 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 to-blue-50 px-4">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-md">
         <h2 className="text-2xl font-bold text-center text-green-700 mb-6">
-          Login to AI Irrigation
+          Login 
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

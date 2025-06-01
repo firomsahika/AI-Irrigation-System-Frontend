@@ -9,7 +9,7 @@ export default function Header() {
   return (
     <header className="bg-white fixed w-full shadow-md px-14 py-2 flex items-center justify-between">
       <Link to="/" className="text-2xl font-bold text-green-700">
-        🌱 AI Irrigation
+        🌱 Automated Irrigation Monitor 
       </Link>
 
       <nav className="flex items-center gap-6">

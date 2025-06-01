@@ -8,7 +8,7 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center px-4 py-12">
       <div className="max-w-3xl text-center">
         <h1 className="text-4xl md:text-5xl font-bold text-green-800 mb-6">
-          Welcome to the AI Irrigation System
+          Welcome to the Smart Irrigation Management System
         </h1>
         <p className="text-lg text-gray-700 mb-8">
           Empowering farmers with intelligent irrigation solutions that save
