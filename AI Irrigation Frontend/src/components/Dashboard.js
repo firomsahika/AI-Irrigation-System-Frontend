@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import SensorCard from './SensorCard';
 import PredictionCard from './PredictionCard';
 import SensorStatus from './SensorStatus';
+import { useWebSocket } from '../services/websocket';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -14,48 +15,15 @@ function Dashboard() {
   const [timestamp, setTimestamp] = useState('');
   const [error, setError] = useState(null);
 
-  const fetchLatestSensorData = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/system/get_sensordata/last`, {
-        method: 'GET',
-        headers: {
-          Authorization:`${token_type} ${token}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors', // Explicitly set CORS mode
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new TypeError("Oops, we haven't got JSON!");
-      }
-
-      const data = await response.json();
-      console.log('API Response:', data);
-      
-      if (data && data.results) {
-        setSensorData(data.results);
-        setTimestamp(data.results.received_at);
-        setError(null);
-      } else {
-        throw new Error('Invalid data format received from API');
-      }
-    } catch (error) {
-      console.error('Error fetching latest sensor data:', error);
-      setError(error.message);
+  const handleWebSocketMessage = (data) => {
+    if (data && data.results) {
+      setSensorData(data.results);
+      setTimestamp(data.results.received_at);
+      setError(null);
     }
   };
 
-  useEffect(() => {
-    fetchLatestSensorData();
-    const interval = setInterval(fetchLatestSensorData, 30000); // Update every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
+  useWebSocket(handleWebSocketMessage);
 
   const sensorCards = [
     { title: 'Soil Moisture', icon: 'fill-drip', value: sensorData?.Soil_Moisture, unit: '' },
@@ -98,7 +66,7 @@ function Dashboard() {
         />
       </div>
 
-      <div className="mt-8 text-center">
+      <div className="text-center mt-8">
         <Link 
           to="/historical" 
           className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"

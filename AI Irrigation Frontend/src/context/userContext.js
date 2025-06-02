@@ -1,5 +1,6 @@
 // userContext.js
 import { createContext, useContext, useState, useEffect } from "react";
+import { websocketService } from "../services/websocket";
 
 const UserContext = createContext();
 
@@ -14,6 +15,7 @@ export const UserProvider = ({ children }) => {
     if (!token) {
       setUser(null);
       setLoading(false);
+      websocketService.disconnect();
       return;
     }
 
@@ -34,9 +36,11 @@ export const UserProvider = ({ children }) => {
 
       const data = await res.json();
       setUser(data);
+      websocketService.connect(token);
     } catch (error) {
       console.error("Error fetching user:", error);
       setUser(null);
+      websocketService.disconnect();
     } finally {
       setLoading(false);
     }
@@ -46,6 +50,7 @@ export const UserProvider = ({ children }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("token_type");
     setUser(null);
+    websocketService.disconnect();
     window.location.href = "/auth/login"; // redirect to login
   };
 
@@ -60,4 +65,10 @@ export const UserProvider = ({ children }) => {
   );
 };
 
-export const useUser = () => useContext(UserContext);
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error("useUser must be used within a UserProvider");
+  }
+  return context;
+};

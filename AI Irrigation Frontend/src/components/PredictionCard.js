@@ -14,7 +14,7 @@ function PredictionCard({ prediction }) {
         <h3 className="text-lg font-semibold text-gray-800">Irrigation Status</h3>
       </div>
       <div className="text-xl font-bold text-gray-900">
-        {isIrrigationNeeded ? 'Irrigation Recommended' : 'No Irrigation Needed'}
+        {isIrrigationNeeded ? 'No Irrigation Needed':'Irrigation Recommended'}
       </div>
       <div className="text-sm text-gray-600 mt-2">
         Based on current conditions
