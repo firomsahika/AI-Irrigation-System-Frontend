@@ -37,7 +37,7 @@ function RegisterForm() {
 
         
       if (response.status===201 | response.status===200) {
-        navigate("/dashboard");
+        navigate("/auth/login");
       } else {
         alert("Registration failed");
       }

@@ -1,89 +1,65 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Bar } from 'react-chartjs-2';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
+} from "chart.js";
 
+// Register chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
   Legend
 );
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const HistoricalData = () => {
+  const [sensorDataArray, setSensorDataArray] = useState([]);
+  const [timestamps, setTimestamps] = useState([]);
 
-function HistoricalData() {
-  const [chartData, setChartData] = useState(null);
-  const [timestamp, setTimestamp] = useState('');
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+  const token = localStorage.getItem("token");
+  const token_type = localStorage.getItem("token_type");
 
   const fetchLatestSensorData = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/system/get_sensordata/last`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors',
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/api/system/get_sensordata`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `${token_type} ${token}`,
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          mode: "cors",
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error("Network response was not ok");
       }
 
       const data = await response.json();
+      const sensorData = data.results;
+      setSensorDataArray(sensorData);
 
-      const sensorData = data.results; // Assuming response has `results`
-
-      const chartData = {
-        labels: [
-          'Soil Moisture',
-          'Soil Humidity',
-          'Air Temperature',
-          'Air Humidity',
-          'Pressure (KPa)',
-          'Wind Speed (Kmh)',
-          'Rainfall (mm)',
-        ],
-        datasets: [
-          {
-            label: 'Latest Sensor Values',
-            data: [
-              sensorData.Soil_Moisture,
-              sensorData.Soil_Humidity,
-              sensorData.Air_temperature_C,
-              sensorData.Air_humidity_,
-              sensorData.Pressure_KPa,
-              sensorData.Wind_speed_Kmh,
-              sensorData.rainfall,
-            ],
-            backgroundColor: [
-              '#4fd1c5',
-              '#63b3ed',
-              '#f56565',
-              '#a0aec0',
-              '#f6ad55',
-              '#9f7aea',
-              '#68d391',
-            ],
-          },
-        ],
-      };
-
-      setChartData(chartData);
-      setTimestamp(sensorData.received_at || sensorData.created_at || '');
+      const timestamps = sensorData.map(
+        (item) => item.received_at || item.created_at || ""
+      );
+      setTimestamps(timestamps);
     } catch (error) {
-      console.error('Error fetching latest sensor data:', error);
+      console.error("Error fetching sensor data:", error);
     }
   };
 
@@ -93,14 +69,13 @@ function HistoricalData() {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Latest Sensor Data Overview',
-      },
+      legend: { position: "top" },
+      title: { display: true, text: "Sensor Snapshot" },
+    },
+    scales: {
+      y: { beginAtZero: true },
     },
   };
 
@@ -109,22 +84,71 @@ function HistoricalData() {
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-primary">
           <i className="fas fa-history mr-2"></i>
-          Sensor Snapshot
+          Sensor History
         </h1>
-        <div className="text-gray-600 mt-2">
-          Last Updated: {timestamp ? new Date(timestamp).toLocaleString() : 'N/A'}
-        </div>
       </header>
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        {chartData ? (
-          <Bar options={options} data={chartData} />
-        ) : (
-          <div className="text-center text-gray-600">Loading chart data...</div>
-        )}
-      </div>
+      {sensorDataArray.length > 0 ? (
+        sensorDataArray.map((data, index) => {
+          const labels = [
+            "Soil Moisture",
+            "Soil Humidity",
+            "Air Temperature",
+            "Air Humidity",
+            "Pressure (KPa)",
+            "Wind Speed (Kmh)",
+            "Rainfall (mm)",
+          ];
 
-      <div className="text-center">
+          const values = [
+            data.Soil_Moisture,
+            data.Soil_Humidity,
+            data.Air_temperature_C,
+            data.Air_humidity_,
+            data.Pressure_KPa,
+            data.Wind_speed_Kmh,
+            data.rainfall,
+          ];
+
+          const chartData = {
+            labels,
+            datasets: [
+              {
+                label: `Snapshot ${index + 1}`,
+                data: values,
+                borderColor: "#4fd1c5",
+                backgroundColor: "#4fd1c5",
+                fill: false,
+                tension: 0.4,
+              },
+            ],
+          };
+
+          return (
+            <div
+              key={index}
+              className="bg-white rounded-lg shadow-md p-6 mb-10"
+            >
+              <h2 className="text-xl font-semibold mb-2 text-primary">
+                Snapshot {index + 1}
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Timestamp:{" "}
+                {timestamps[index]
+                  ? new Date(timestamps[index]).toLocaleString()
+                  : "N/A"}
+              </p>
+              <div style={{ height: "300px", width: "80%", margin: "auto" }}>
+                <Line options={options} data={chartData} />
+              </div>
+            </div>
+          );
+        })
+      ) : (
+        <div className="text-center text-gray-600">Loading chart data...</div>
+      )}
+
+      <div className="text-center mt-8">
         <Link
           to="/"
           className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
@@ -135,6 +159,6 @@ function HistoricalData() {
       </div>
     </div>
   );
-}
+};
 
 export default HistoricalData;
