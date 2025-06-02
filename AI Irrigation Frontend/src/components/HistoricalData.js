@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Line } from "react-chartjs-2";
 import {
@@ -11,7 +11,6 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { useWebSocket } from '../services/websocket';
 
 // Register chart.js components
 ChartJS.register(
@@ -28,19 +27,45 @@ const HistoricalData = () => {
   const [sensorDataArray, setSensorDataArray] = useState([]);
   const [timestamps, setTimestamps] = useState([]);
 
-  const handleWebSocketMessage = (data) => {
-    if (data && data.results) {
-      const sensorData = Array.isArray(data.results) ? data.results : [data.results];
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+  const token = localStorage.getItem("token");
+  const token_type = localStorage.getItem("token_type");
+
+  const fetchLatestSensorData = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/system/get_sensordata`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `${token_type} ${token}`,
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          mode: "cors",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      const sensorData = data.results;
       setSensorDataArray(sensorData);
 
-      const newTimestamps = sensorData.map(
+      const timestamps = sensorData.map(
         (item) => item.received_at || item.created_at || ""
       );
-      setTimestamps(newTimestamps);
+      setTimestamps(timestamps);
+    } catch (error) {
+      console.error("Error fetching sensor data:", error);
     }
   };
 
-  useWebSocket(handleWebSocketMessage);
+  useEffect(() => {
+    fetchLatestSensorData();
+  }, []);
 
   const options = {
     responsive: true,
